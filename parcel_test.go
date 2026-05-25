@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	_ "modernc.org/sqlite"
 )
@@ -48,6 +49,7 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 	// prepare
 	db := setupTestDB(t) // настройте подключение к БД
+	defer db.Close()     // не забудьте закрыть подключение к БД после завершения теста
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
@@ -64,7 +66,7 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	stored, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel, stored)
+	assert.Equal(t, parcel, stored)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -81,6 +83,7 @@ func TestAddGetDelete(t *testing.T) {
 func TestSetAddress(t *testing.T) {
 	// prepare
 	db := setupTestDB(t) // настройте подключение к БД
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
@@ -100,7 +103,7 @@ func TestSetAddress(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	stored, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, newAddress, stored.Address)
+	assert.Equal(t, newAddress, stored.Address)
 
 }
 
@@ -108,7 +111,7 @@ func TestSetAddress(t *testing.T) {
 func TestSetStatus(t *testing.T) {
 	// prepare
 	db := setupTestDB(t) // настройте подключение к БД
-
+	defer db.Close()
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
 
@@ -127,7 +130,7 @@ func TestSetStatus(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что статус обновился
 	stored, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, ParcelStatusDelivered, stored.Status)
+	assert.Equal(t, ParcelStatusDelivered, stored.Status)
 
 }
 
@@ -135,6 +138,7 @@ func TestSetStatus(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 	// prepare
 	db := setupTestDB(t) // настройте подключение к БД
+	defer db.Close()
 
 	store := NewParcelStore(db)
 
@@ -170,15 +174,15 @@ func TestGetByClient(t *testing.T) {
 	// убедитесь в отсутствии ошибки
 	require.NoError(t, err)
 	// убедитесь, что количество полученных посылок совпадает с количеством добавленных
-	require.Len(t, storedParcels, len(parcels))
+	assert.Len(t, storedParcels, len(parcels))
 	// check
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
 		expected, ok := parcelMap[parcel.Number]
-		require.True(t, ok, "unexpected parcel number: %d", parcel.Number)
-		require.Equal(t, expected, parcel)
+		assert.True(t, ok, "unexpected parcel number: %d", parcel.Number)
+		assert.Equal(t, expected, parcel)
 
 	}
 }
